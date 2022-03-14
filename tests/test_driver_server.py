@@ -1,64 +1,143 @@
 from flask import Flask
 import json
-import ast
-
+import pytest
 from api.driver_server import init_driver_server
 from core.driver import Driver
+from core.task import JobStatus
 
 
-n_mappers = 4
-n_reducers = 2
-i_path = '/input/dir/path'
-m_path = '/middle/dir/path'
-o_path = '/output/dir/path'
+@pytest.fixture()
+def driver():
+    n_mappers = 2
+    n_reducers = 1
+    i_path = ['file1', 'file2']
+    m_path = '/middle/dir/path'
+    o_path = '/output/dir/path'
+    driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
 
-driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
-
-
-def test_run_task():
-    app = Flask(__name__)
-    init_driver_server(app, driver)
-    client = app.test_client()
-    url = '/task/run'
-    mock_data_dict = {
-        'id': 4,
-        'i_path': ['file1', 'file2'],
-        'n_buckets': 2,
-        'type': 'mapper'
-    }
-
-    response = client.post(url)
-    data_dict = ast.literal_eval(response.get_data().decode("UTF-8"))
-    assert data_dict == mock_data_dict
-    assert response.status_code == 200
+    yield driver
 
 
-def test_finish_task():
-    app = Flask(__name__)
-    init_driver_server(app, driver)
-    client = app.test_client()
-    url = '/task/finish'
-    mock_request_headers = {}
-    mock_request_data = {
-        'id': 4
-    }
+class TestDriverServer:
 
-    response = client.post(url, data=json.dumps(mock_request_data), headers=mock_request_headers, content_type='application/json')
-    assert response.status_code == 200
+    def test_get_task_status_success(self, driver):
+        app = Flask(__name__)
+        init_driver_server(app, driver)
+        client = app.test_client()
+        url = '/task/mapper/0/status'
+        mock_response_data_dict = {
+            "status": 2
+        }
 
+        mock_request_headers = {
+            'worker-pid': '123'
+        }
 
-def test_heartbeat_task():
-    app = Flask(__name__)
-    init_driver_server(app, driver)
-    client = app.test_client()
-    url = '/task/heartbeat'
-    mock_request_headers = {}
-    mock_request_data = {
-        'id': 4
-    }
+        response = client.get(url, headers=mock_request_headers)
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert mock_response_data_dict == data
 
-    response = client.post(url, data=json.dumps(mock_request_data), headers=mock_request_headers, content_type='application/json')
-    assert response.status_code == 200
+    def test_get_task_status_missing_header(self, driver):
+        app = Flask(__name__)
+        init_driver_server(app, driver)
+        client = app.test_client()
+        url = '/task/pepe/5/status'
+
+        response = client.get(url)
+        assert response.status_code == 400
+
+    def test_get_task_status_not_found(self, driver):
+        app = Flask(__name__)
+        init_driver_server(app, driver)
+        client = app.test_client()
+        url = '/task/pepe/5/status'
+
+        mock_request_headers = {
+            'worker-pid': '123'
+        }
+
+        response = client.get(url, headers=mock_request_headers)
+        assert response.status_code == 404
+
+    def test_driver_server_success_job(self, driver):
+        app = Flask(__name__)
+        init_driver_server(app, driver)
+        client = app.test_client()
+        run_task_url = '/task'
+        finish_mapper0_task_url = '/task/mapper/0/status'
+        finish_mapper1_task_url = '/task/mapper/1/status'
+        finish_reducer0_task_url = '/task/reducer/0/status'
+
+        mock_request_headers_pid1 = {'worker-pid': 29980, 'Content-Type': 'application/json'}
+        mock_request_headers_pid2 = {'worker-pid': 29981, 'Content-Type': 'application/json'}
+
+        mock_request_body_finish_task = {'status': 4}
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid1) #run task mapper1
+        assert response.status_code == 200
+        response = client.put(run_task_url, headers=mock_request_headers_pid2) #run task mapper0
+        assert response.status_code == 200
+
+        response = client.post(finish_mapper1_task_url, data=json.dumps(mock_request_body_finish_task), headers=mock_request_headers_pid1) # finish task mapper0
+        assert response.status_code == 200
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid1)  # run reduce0 but mapper0 still running so reduce0 is blocked
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert 'job_uuid' in data is not None
+        assert data['job_status'] == JobStatus.running
+        assert data['id'] is None
+        assert data['type'] is None
+        assert data['i_path'] is None
+        assert data['o_path'] is None
+
+        response = client.post(finish_mapper0_task_url, data=json.dumps(mock_request_body_finish_task), headers=mock_request_headers_pid2) # finish task mapper0
+        assert response.status_code == 200
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid2)  # run reduce0 which is no longer blocked
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert 'job_uuid' in data is not None
+        assert data['job_status'] == JobStatus.running
+        assert data['id'] == 0
+        assert data['type'] == 'reducer'
+        assert data['i_path'] == '/middle/dir/path'
+        assert data['o_path'] == '/output/dir/path'
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid1)  # reducer0 still running but no more pending tasks
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert 'job_uuid' in data is not None
+        assert data['job_status'] == JobStatus.running
+        assert data['id'] is None
+        assert data['type'] is None
+        assert data['i_path'] is None
+        assert data['o_path'] is None
+
+        response = client.post(finish_reducer0_task_url, data=json.dumps(mock_request_body_finish_task), headers=mock_request_headers_pid2)  # finish task mapper0
+        assert response.status_code == 200 # reducer0 finishes
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid1)  # reducer0 still running but no more pending tasks
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert 'job_uuid' in data is not None
+        assert data['job_status'] == JobStatus.finished
+        assert data['id'] is None
+        assert data['type'] is None
+        assert data['i_path'] is None
+        assert data['o_path'] is None
+
+        response = client.put(run_task_url, headers=mock_request_headers_pid2)  # reducer0 still running but no more pending tasks
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert 'job_uuid' in data is not None
+        assert data['job_status'] == JobStatus.finished
+        assert data['id'] is None
+        assert data['type'] is None
+        assert data['i_path'] is None
+        assert data['o_path'] is None
+
 
 
 
