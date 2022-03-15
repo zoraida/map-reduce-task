@@ -11,10 +11,10 @@ def init_driver_server(app, driver):
         success_validation = True
         if worker_pid is None:
             success_validation = False
-            print('worker-pid header is required')
+            print('ERROR: worker-pid header is required')
         for arg in required_args:
             if arg is None:
-                print('{} parameter on the URL is required'.format(arg))
+                print('ERROR: {} parameter on the URL is required'.format(arg))
                 success_validation = False
                 break
         return success_validation
@@ -32,7 +32,10 @@ def init_driver_server(app, driver):
         if worker_pid is not None:
             task = driver.run_ready_task(worker_pid)
             if task is not None:
-                response = make_response(jsonify(task.__dict__),  200)
+                if task.id is None:
+                    response = make_response(jsonify({'job_uuid': task.job_uuid, 'job_status': task.job_status}), 200)
+                else:
+                    response = make_response(jsonify(task.__dict__),  200)
                 response.headers["Content-Type"] = "application/json"
 
         return response
@@ -56,10 +59,12 @@ def init_driver_server(app, driver):
 
                 else:
                     if request.data is not None:
+                        json_task = None
                         try:
-                            json_task = json.loads(request.data.decode('utf-8'))
-                        except (json.JSONDecodeError, TypeError) as e:
-                            print("Error while decoding request body: {}".format(str(e)))
+                            data = request.data
+                            json_task = json.loads(data.decode('utf-8'))
+                        except json.JSONDecodeError as e:
+                            print("ERROR: Error while decoding request body: {}".format(str(e)))
                             pass
                         else:
                             if 'status' in json_task:

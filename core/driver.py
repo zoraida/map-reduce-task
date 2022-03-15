@@ -29,16 +29,16 @@ class Driver(object):
 
         self.job_uuid = utils.get_uuid()
         self.pending = n_mappers + n_reducers
-        self.mapper_list = [Mapper(self.job_uuid, JobStatus.running, m, self.mapper_files[m], m_path, TaskStatus.ready, n_reducers) for m in
+        mapper_list = [Mapper(self.job_uuid, JobStatus.running, m, self.mapper_files[m], m_path, TaskStatus.ready, n_reducers) for m in
                        range(0, n_mappers)]
-        reducer_list = [HashReducer(self.job_uuid, JobStatus.running, r, m_path, o_path, TaskStatus.blocked) for r in range(0, n_reducers)]
+        reducer_list = [HashReducer(self.job_uuid, JobStatus.running, r, m_path, o_path, TaskStatus.blocked, n_mappers) for r in range(0, n_reducers)]
         #
         self.task_dict = dict()
-        for t in self.mapper_list + reducer_list:
+        for t in mapper_list + reducer_list:
             internal_id = self.__get_internal_id(t.id, t.type.value)
             self.task_dict.setdefault(internal_id, t)
 
-        self.ready_queue = deque(self.mapper_list)
+        self.ready_queue = deque(mapper_list)
         self.running_queue = deque([])
 
         self.notified_workers = dict()
@@ -137,7 +137,7 @@ class Driver(object):
             self.task_dict[self.__get_internal_id(id, type)].status = TaskStatus.finished
             result = True
         else:
-            print('Task with id {} and type {} does not in RUNNING state'.format(id, type))
+            print('ERROR: Task with id {} and type {} does not in RUNNING state'.format(id, type))
             result = False
 
         return result
@@ -148,5 +148,5 @@ class Driver(object):
         if internal_id in self.task_dict:
             task = self.task_dict[internal_id]
         else:
-            print("There is not a valid task with id {} and type {}".format(id, type))
+            print("ERROR: There is not a valid task with id {} and type {}".format(id, type))
         return task

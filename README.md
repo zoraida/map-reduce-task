@@ -20,8 +20,8 @@ The commands below set everything up to run the examples:
     $ virtualenv venv
     $ . venv/bin/activate
     (venv) pip install -r requirements.txt
-    $ python run_driver.py --mappers 4 --reducers 2 --host localhost:5000 --i_path file1 file2 file3 --m_path /path/to/intermediate/dir  --o_path /path/to/output/dir
-    $ python run_worker.py --host localhost:5000
+    $ python run_driver.py --mappers 4 --reducers 2 --port 5000 --i_path file1 file2 file3 --m_path /path/to/intermediate/dir  --o_path /path/to/output/dir
+    $ python run_worker.py --driver http://localhost:5000 # You need to include the protocol scheme
 
 How it works
 ------------

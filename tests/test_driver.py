@@ -30,7 +30,7 @@ class TestDriver:
         assert driver.ready_queue.pop().__dict__  == mapper1.__dict__
         assert driver.ready_queue.pop().__dict__ == mapper0.__dict__
 
-        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.blocked)
+        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.blocked, n_mappers)
         assert driver.running_queue.__len__() == 0
 
         assert driver.task_dict['mapper:0'].__dict__ == mapper0.__dict__
@@ -55,7 +55,7 @@ class TestDriver:
 
         mapper0 = Mapper(job_uuid, JobStatus.running, 0, ['file1', 'file3', 'file5'], m_path, TaskStatus.running, n_reducers)
         mapper1 = Mapper(job_uuid, JobStatus.running, 1, ['file2', 'file4', 'file6'], m_path, TaskStatus.running, n_reducers)
-        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.running)
+        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.running, n_mappers)
 
         task = driver.run_ready_task(process_pid1) # mapper1 starts
         assert task.__dict__ == mapper1.__dict__
@@ -124,7 +124,7 @@ class TestDriver:
         driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
 
         mapper0 = Mapper(job_uuid, JobStatus.running, 0, ['file1', 'file3', 'file5'], m_path, TaskStatus.running, n_reducers)
-        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.running)
+        reducer0 = HashReducer(job_uuid, JobStatus.running,0, m_path, o_path, TaskStatus.running, n_mappers)
 
         driver.run_ready_task(process_pid)
         assert driver.finish_running_task(process_pid, mapper0.id, mapper0.type.value) is True
@@ -156,7 +156,7 @@ class TestDriver:
 
         driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
 
-        reducer0 = HashReducer(job_uuid, JobStatus.running, 0, m_path, o_path, TaskStatus.running)
+        reducer0 = HashReducer(job_uuid, JobStatus.running, 0, m_path, o_path, TaskStatus.running, n_mappers)
 
         driver.run_ready_task(process_pid)
         assert driver.finish_running_task(process_pid, reducer0.id, reducer0.type.value) is False

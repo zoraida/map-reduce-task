@@ -20,7 +20,7 @@ def get_parser():
     Creates a new argument parser.
     """
     parser = argparse.ArgumentParser('Word Count Driver')
-    parser.add_argument('--port', '-p', help='Driver PORT: 5000', required=True)
+    parser.add_argument('--port', '-p', help='Driver PORT: 5000', type=int, default=5000)
     parser.add_argument('--mappers', '-m', type=int, help='Number of mapper tasks', required=True)
     parser.add_argument('--reducers', '-r', type=int, help='Number of reducer tasks', required=True)
     parser.add_argument('--i_path', '-ip', help='Input path directory', required=True)
@@ -30,9 +30,9 @@ def get_parser():
     return parser
 
 
-def run_driver_server(app, driver):
+def run_driver_server(app, driver, port):
     init_driver_server(app, driver)
-    app.run()
+    app.run(host="localhost", port=port)
 
 
 def main(args=None):
@@ -43,11 +43,11 @@ def main(args=None):
     existing_dir(args.m_path)
     existing_dir(args.o_path)
 
-    input_files = os.listdir(args.i_path)
+    input_files = [os.path.join(args.i_path, f) for f in os.listdir(args.i_path)]
 
     app = Flask(__name__)
     driver = Driver(args.mappers, args.reducers, input_files, args.m_path, args.o_path)
-    run_driver_server(app, driver)
+    run_driver_server(app, driver, args.port)
     # TODO thread that in background checks if all workers have been notified of all tasks being completed to exit
 
 
