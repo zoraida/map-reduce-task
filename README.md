@@ -20,16 +20,16 @@ The commands below set everything up to run the examples:
     $ virtualenv venv
     $ . venv/bin/activate
     (venv) pip install -r requirements.txt
-    $ python run_driver.py --mappers 4 --reducers 2 --port 5000 --i_path file1 file2 file3 --m_path /path/to/intermediate/dir  --o_path /path/to/output/dir
+    $ python run_driver.py --mappers 4 --reducers 2 --port 5000 --i_path /path/to/input/dir --m_path /path/to/intermediate/dir  --o_path /path/to/output/dir
     $ python run_worker.py --driver http://localhost:5000 # You need to include the protocol scheme
 
 How it works
 ------------
 The driver exposes an API:
 
-    $ PUT /task/{type}/{id} for requesting a task to be run by a worker
-    $ POST /task/{type}/{id} for update task status to FINISHED
-    $ GET /task/{type}/{id} for getting taks status info
+    $ PUT /task/ for requesting a task to be run by a worker
+    $ POST /task/{type}/{id}/status for update task status
+    $ GET /task/{type}/{id}/status for getting taks status
 
 
 - For now I want to try to keep both driver and worker simple:
@@ -63,7 +63,7 @@ available, it would produce a deadlock :( Some preemption mechanism???
 Other considerations
 --------------------
 - For the last 6 years I have been programing in either Scala or Java. I took this opportunity to play around with
-Python so be nice with me :)
+Python so please, be nice with me :)
 - I guess with gRPC I would be able to solve some the questions raised above. However, I found Flask easier to use, so 
 I choose it instead.
 
