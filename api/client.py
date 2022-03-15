@@ -14,13 +14,14 @@ class Client:
 
         response = None
         status_code = None
+        body = None
         try:
             response = requests.request(url=url, method=method, data=data, headers=headers)
         except Exception as e:
             print("ERROR: Exception while requesting to the server: {}".format(e))
         else:
             status_code = response.status_code
-            body = None
+
             try:
                 body = response.data.decode('utf-8') #bytestream to dict
             except Exception as e:
@@ -30,7 +31,8 @@ class Client:
             if body is None:
                 body = response.text
 
-            return status_code, body
+        return status_code, body
+
 
     def get(self, url, headers={}):
         return self.send(url, 'GET', headers=headers)

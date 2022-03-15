@@ -27,7 +27,7 @@ class TestWorkerClient():
         worker_client = WorkerClient(self.host, self.worker_pid)
         task_json =  worker_client.run_task()
 
-        assert json.loads(task_json) == expected_task_json
+        assert task_json == expected_task_json
 
     def test_run_task_fails(self, requests_mock):
 

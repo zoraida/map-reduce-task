@@ -1,4 +1,5 @@
 import json
+import time
 from core.task import Task, Mapper, HashReducer, JobStatus, TaskType
 
 
@@ -21,7 +22,7 @@ class Worker(object):
 
             if task_dict is not None:
                 if 'id' in task_dict: # task has been returned
-                    print("INFO: Task {} has been assigned".format(task_dict))
+                    print("INFO: Task [{}-{}] has been assigned. Taks details: {}".format(task_dict['type'], task_dict['id'], task_dict))
                     if 'type' in task_dict and task_dict['type'] == TaskType.mapper:
                         task = Mapper(task_dict['job_uuid'], task_dict['job_status'], task_dict['id'], task_dict['i_path'], task_dict['o_path'], task_dict['status'], task_dict['n_buckets'])
                     else:
@@ -39,7 +40,7 @@ class Worker(object):
                     print('FATAL: Unexpected value returned by the driver: {}. Exiting ...'.format(task))
                     exit(1)
             else:
-                print('FATAL: Unexpected value returned by the driver: {}. Exiting ...'.format(task))
-                exit(1)
+                print('WARNING: Error connecting with the driver. Trying again in a few seconds... ')
+                time.sleep(5)
 
         print("INFO: Shutting down Worker ...")
