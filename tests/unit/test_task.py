@@ -1,6 +1,5 @@
-from core.task import Mapper, HashReducer, JobStatus, TaskStatus
+from commons.task import Mapper, HashReducer, JobStatus, TaskStatus
 import os
-import pytest
 import filecmp
 import shutil
 

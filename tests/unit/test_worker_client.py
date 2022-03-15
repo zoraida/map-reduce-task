@@ -1,7 +1,4 @@
-import requests
-import json
-from api.worker_client import WorkerClient
-import requests_mock
+from worker.worker_client import WorkerClient
 
 
 class TestWorkerClient():

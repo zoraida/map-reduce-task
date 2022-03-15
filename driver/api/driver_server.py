@@ -1,8 +1,7 @@
 from flask import request, jsonify, make_response
 import json
 import requests
-from core.driver import Driver
-from core.task import Mapper, TaskStatus
+from commons.task import TaskStatus
 
 
 def configure(app, driver):

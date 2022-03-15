@@ -1,9 +1,9 @@
 from flask import Flask
 import json
 import pytest
-from api import driver_server
-from core.driver import Driver
-from core.task import JobStatus
+from driver.api import driver_server
+from driver.driver import Driver
+from commons.task import JobStatus
 
 
 @pytest.fixture()

@@ -1,12 +1,12 @@
-from core.task import Mapper, HashReducer, TaskStatus, JobStatus
+from commons.task import Mapper, HashReducer, TaskStatus, JobStatus
 from mock import patch
-from core.driver import Driver
-import utils
+from driver.driver import Driver
+from commons import utils
 
 
 class TestDriver:
 
-    @patch('utils.get_uuid')
+    @patch('commons.utils.get_uuid')
     def test__init__(self, mock_uuid):
         mock_uuid.return_value = '1234567890'
         job_uuid = utils.get_uuid()
@@ -37,7 +37,7 @@ class TestDriver:
         assert driver.task_dict['mapper:1'].__dict__ == mapper1.__dict__
         assert driver.task_dict['reducer:0'].__dict__ == reducer0.__dict__
 
-    @patch('utils.get_uuid')
+    @patch('commons.utils.get_uuid')
     def test_driver_success_job(self, mock_uuid):
         mock_uuid.return_value = '1234567890'
         job_uuid = utils.get_uuid()
@@ -108,7 +108,7 @@ class TestDriver:
         assert driver.running_queue.__len__() == 0
         assert driver.ready_queue.__len__() == 0
 
-    @patch('utils.get_uuid')
+    @patch('commons.utils.get_uuid')
     def test_run_ready_task_already_notified_worker(self, mock_uuid):
         mock_uuid.return_value = '1234567890'
         job_uuid = utils.get_uuid()
@@ -141,7 +141,7 @@ class TestDriver:
         task = driver.run_ready_task(process_pid)
         assert task is None
 
-    @patch('utils.get_uuid')
+    @patch('commons.utils.get_uuid')
     def test_finish_running_task_fails_on_blocked_task(self, mock_uuid):
         mock_uuid.return_value = '1234567890'
         job_uuid = utils.get_uuid()

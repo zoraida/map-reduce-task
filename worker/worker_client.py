@@ -1,4 +1,4 @@
-from api.client import Client
+from worker.client import Client
 import json
 
 

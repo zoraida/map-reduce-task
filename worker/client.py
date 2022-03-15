@@ -25,7 +25,7 @@ class Client:
             try:
                 body = response.data.decode('utf-8') #bytestream to dict
             except Exception as e:
-                print ("DEBUG: Decode error on the response data: {}".format(e))
+                # print ("DEBUG: Decode error on the response data: {}".format(e))
                 pass
 
             if body is None:

@@ -1,6 +1,5 @@
-import json
 import time
-from core.task import Task, Mapper, HashReducer, JobStatus, TaskType
+from commons.task import Mapper, HashReducer, JobStatus, TaskType
 
 
 class Worker(object):

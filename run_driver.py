@@ -1,6 +1,6 @@
 from flask import Flask
-from api import driver_server
-from core.driver import Driver
+from driver.api import driver_server
+from driver.driver import Driver
 import threading
 import os
 

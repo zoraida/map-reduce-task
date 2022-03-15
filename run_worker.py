@@ -1,7 +1,7 @@
 import argparse
 import os
-from api.worker_client import WorkerClient
-from core.worker import Worker
+from worker.worker_client import WorkerClient
+from worker.worker import Worker
 
 __version__ = '0.1.0'
 __author__ = u'Zoraida Hidalgo'

@@ -1,8 +1,8 @@
-from core.task import Mapper, HashReducer, TaskStatus, JobStatus, TaskType, Task
+from commons.task import Mapper, HashReducer, TaskStatus, JobStatus, TaskType, Task
 from collections import deque
 from threading import Lock
-import sys
-import utils
+from commons import utils
+import time
 
 
 class Driver(object):
@@ -85,6 +85,7 @@ class Driver(object):
     def reduce_tasks_to_ready_queue(self):
         for t in self.task_dict.values():
             if t.type == TaskType.reducer:
+                t.status = TaskStatus.ready
                 self.ready_queue.append(t)
 
     def run_ready_task(self, worker_pid):
@@ -150,3 +151,11 @@ class Driver(object):
         else:
             print("ERROR: There is not a valid task with id {} and type {}".format(id, type))
         return task
+
+    def all_workers_notified(self):
+        while True:
+            if self.notified_workers and all(self.notified_workers.values()):
+                break
+            else:
+                time.sleep(5)
+        return True
