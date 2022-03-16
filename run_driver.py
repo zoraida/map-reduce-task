@@ -1,18 +1,16 @@
 from flask import Flask
-from driver.api import driver_server
-from driver.driver import Driver
 import threading
 import os
+
+from driver.api import driver_server
+from driver.driver import Driver
+from commons.utils import existing_dir
+
 
 import argparse
 
 __version__ = '0.1.0'
 __author__ = u'Zoraida Hidalgo'
-
-
-def existing_dir(path):
-    if not os.path.isdir(path):
-        raise argparse.ArgumentTypeError("existing_dir:{0} is not a valid path".format(path))
 
 
 def get_parser():

@@ -34,25 +34,25 @@ The driver exposes an API:
 
 - For now I want to try to keep both driver and worker simple:
   - All tasks states are keep in memory.
-  - The driver keeps BLOCKED, READY and RUNNING queues. Initially only map tasks are on the READY queue whereas
-  reduce tasks are on the BLOCKED one. 
-  - When a worker request a task(PUT /task request):
-    - Only when all the map tasks have finished reduce tasks start: if all map tasks have finished and reduce tasks are into
-      the BLOCKED queue then they are moved to the READY queue.
-    - If there is a READY task then it is given to the worker and moved to the RUNNING queue.
-    - If there is no READY task but there are both, RUNNING and BLOCKING tasks, then the worker is invited to try later.
-    - If all the tasks are in FINISHED state, then the worker is notified thus it will exit successfully. If all the
-    workers have been already notified then the driver will exit successfully too.
+  - The driver keeps READY and RUNNING queues. Initially only map tasks are on the READY queue whereas
+  reduce tasks are on a BLOCKED status. 
+  - When a worker request a task(PUT /task end point):
+    - Only when all the map tasks have finished reduce tasks start: if all map tasks have finished and reduce tasks are 
+    in a BLOCKED status then they are added to the READY queue.
+    - If there is a READY task then it is given to a requester worker and moved it to the RUNNING queue.
+    - If there is no a READY task but there are either RUNNING or BLOCKING tasks, then the worker is invited to try later.
+    - If all the tasks are in a FINISHED status, then the worker is notified thus it exits successfully. If all the
+    workers have been already notified then the driver exits successfully too.
 
-  - When a worker notifies a finished task(POST /task request):
-    - The task is removed from the RUNNING queue and its state is changed to FINISHED.
+  - When a worker notifies a finished task(POST /task/{type}/{id}/status end point):
+    - The task is removed from the RUNNING queue and its status is changed to FINISHED.
   
 Some thoughts
 -------------
 - I would like to have implemented other approach for reduce tasks but for now, since a given map task may generate 
-word counts for any word (thus any reducer) and data cannot be sent among processes I found it the simplest even not 
-the most efficient. I considered allowing the driver to assign a reduce task to a requester worker before all map tasks 
-completion and just let it monitor its input files. However, if any running map fails and there are no more workers
+word counts for any word (thus any reducer) and data cannot be sent among processes, I found it the simplest even not 
+the most efficient approach. I considered allowing the driver to assign a reduce task to a requester worker before all map tasks 
+completion, just letting it monitor its input files. However, if any running map fails and there are no more workers
 available, it would produce a deadlock :( Some preemption mechanism???
 - Thinking on how to acknowledge the driver that workers are still alive:
   - providing a heartbeat end point to notice the driver that workers are still alive. Still not sure on
@@ -66,7 +66,6 @@ Other considerations
 Python so please, be nice with me :)
 - I guess with gRPC I would be able to solve some the questions raised above. However, I found Flask easier to use, so 
 I choose it instead.
-
 
 Examples of API usage
 ---------------------

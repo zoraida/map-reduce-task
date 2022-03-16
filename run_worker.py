@@ -1,7 +1,9 @@
 import argparse
 import os
+
 from worker.worker_client import WorkerClient
 from worker.worker import Worker
+from commons.utils import existing_dir
 
 __version__ = '0.1.0'
 __author__ = u'Zoraida Hidalgo'
@@ -23,6 +25,8 @@ def main(args=None):
     pid = os.getpid()
 
     worker_client = WorkerClient(args.driver, pid)
+    # TODO check if the server is reachable
+
     worker = Worker(worker_client)
     worker.run()
 

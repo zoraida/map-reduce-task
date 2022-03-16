@@ -1,6 +1,8 @@
 import enum
 import os
 
+from commons.utils import existing_dir
+
 
 class JobStatus(enum.IntEnum):
     running = 1
@@ -40,12 +42,13 @@ class Mapper(Task):
 
     def __init__(self, job_uuid, job_status, id, i_path, o_path, status, n_buckets):
         self.n_buckets = n_buckets
+
         Task.__init__(self, job_uuid, job_status, id, TaskType.mapper, i_path, o_path, status)
 
     def generate_output_file_names(self):
         output_files = []
         for b in range(0, self.n_buckets):
-            output_files.append('{}/mr-{}-{}'.format(self.o_path, self.id, b))
+            output_files.append(os.path.join(self.o_path, 'mr-{}-{}'.format(self.id, b)))
         return output_files
 
     def open_output_files(self):
@@ -82,12 +85,13 @@ class HashReducer(Task):
 
     def __init__(self, job_uuid, job_status, id, i_path, o_path, status, n_mappers):
         self.n_mappers = n_mappers
+
         Task.__init__(self, job_uuid, job_status, id, TaskType.reducer, i_path, o_path, status)
 
     def generate_input_file_names(self):
         input_files = []
         for m in range(0, self.n_mappers):
-            input_files.append('{}/mr-{}-{}'.format(self.i_path, m, self.id))
+            input_files.append(os.path.join(self.i_path, 'mr-{}-{}'.format(m, self.id)))
         return input_files
 
     def reduce(self):

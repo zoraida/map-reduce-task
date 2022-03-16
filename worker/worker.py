@@ -1,5 +1,6 @@
 import time
 from commons.task import Mapper, HashReducer, JobStatus, TaskType
+from commons.utils import existing_dir
 
 
 class Worker(object):
@@ -21,7 +22,8 @@ class Worker(object):
 
             if task_dict is not None:
                 if 'id' in task_dict: # task has been returned
-                    print("INFO: Task [{}-{}] has been assigned. Taks details: {}".format(task_dict['type'], task_dict['id'], task_dict))
+                    print("INFO: [worker- {}] Task [{}-{}] has been assigned. Taks details: {}".format(self.worker_client.pid, task_dict['type'], task_dict['id'], task_dict))
+
                     if 'type' in task_dict and task_dict['type'] == TaskType.mapper:
                         task = Mapper(task_dict['job_uuid'], task_dict['job_status'], task_dict['id'], task_dict['i_path'], task_dict['o_path'], task_dict['status'], task_dict['n_buckets'])
                     else:
@@ -30,16 +32,16 @@ class Worker(object):
                     task.run()
                     self.worker_client.finish_task(task.id, task.type)
                 elif 'job_status' in task_dict and task_dict['job_status'] == JobStatus.running:
-                    print('INFO: No tasks available at the moment. Retrying ...')
+                    print('INFO: [worker- {}] No tasks available at the moment. Retrying ...'.format(self.worker_client.pid))
                     pass
                 elif 'job_status' in task_dict and task_dict['job_status'] == JobStatus.finished:
-                    print('INFO: All tasks have been run. The job is complete.')
+                    print('INFO: [worker- {}] All tasks have been run. The job is complete.'.format(self.worker_client.pid))
                     break
                 else:
-                    print('FATAL: Unexpected value returned by the driver: {}. Exiting ...'.format(task))
+                    print('FATAL: [worker- {}] Unexpected value returned by the driver: {}. Exiting ...'.format(self.worker_client.pid, task))
                     exit(1)
             else:
-                print('WARNING: Error connecting with the driver. Trying again in a few seconds... ')
+                print('WARNING: [worker- {}] Error connecting with the driver. Trying again in a few seconds... '.format(self.worker_client.pid))
                 time.sleep(5)
 
-        print("INFO: Shutting down Worker ...")
+        print("INFO: [worker- {}] Shutting down Worker ...".format(self.worker_client.pid))

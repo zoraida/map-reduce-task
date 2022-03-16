@@ -14,8 +14,8 @@ class TestDriver:
         n_mappers = 2
         n_reducers = 1
         i_path = ['file1', 'file2', 'file3', 'file4', 'file5']
-        m_path = '/intermediate/path'
-        o_path = '/output/path'
+        m_path = '/data/intermediate/path'
+        o_path = '/data/output/path'
 
         driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
 
@@ -145,14 +145,13 @@ class TestDriver:
     def test_finish_running_task_fails_on_blocked_task(self, mock_uuid):
         mock_uuid.return_value = '1234567890'
         job_uuid = utils.get_uuid()
+        process_pid = 29980
 
         n_mappers = 1
         n_reducers = 1
         i_path = ['file1', 'file2', 'file3', 'file4', 'file5', 'file6']
         m_path = '/intermediate/path'
         o_path = '/output/path'
-
-        process_pid = 29980
 
         driver = Driver(n_mappers, n_reducers, i_path, m_path, o_path)
 
